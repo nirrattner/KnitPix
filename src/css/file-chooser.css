@@ -1,0 +1,7 @@
+.filename {
+  margin-left: 5px;
+}
+
+input.file-input {
+  display: none;
+}
