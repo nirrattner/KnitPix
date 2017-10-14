@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
-
-import '../../css/file-chooser.css'
+import { Checkbox, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 
 class SizeChooser extends Component {
   render() {
-    const { 
+    const {
+      hasGaugeAdjustments,
       originalImage,
+      onHasGaugeAdjustmentChange,
       onStitchesHighChange,
       onStitchesWideChange,
       stitchesHigh,
@@ -33,6 +33,12 @@ class SizeChooser extends Component {
             onChange={onStitchesWideChange}
           />
         </FormGroup>
+        <Checkbox 
+          checked={hasGaugeAdjustments}
+          onChange={onHasGaugeAdjustmentChange}
+        >
+          Adjust for gauge
+        </Checkbox>
       </div>
     );
   }

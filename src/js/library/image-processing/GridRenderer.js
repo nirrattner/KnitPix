@@ -24,9 +24,9 @@ export function renderGrid(image, gridColor, stitchesHigh, stitchesWide) {
 
   image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
     if (horizontalLinePixels.includes(y) || veritcalLinePixels.includes(x)) {
-      image.bitmap.data[ idx + 0 ] = gridRed;
-      image.bitmap.data[ idx + 1 ] = gridGreen;
-      image.bitmap.data[ idx + 2 ] = gridBlue;
+      image.bitmap.data[idx + 0] = gridRed;
+      image.bitmap.data[idx + 1] = gridGreen;
+      image.bitmap.data[idx + 2] = gridBlue;
     }
   });
   return image;

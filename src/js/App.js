@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import { Col, Grid, Row } from 'react-bootstrap';
 import debounce from 'javascript-debounce';
 
-import { readImage, toImageSource } from './library/ImageReader';
-import Jimp from './library/Jimp';
-import { renderGrid } from './library/GridRenderer';
 import Sidebar from './container/Sidebar';
 import OriginalImage from './container/OriginalImage';
 import ModifiedImage from './container/ModifiedImage';
+
+import * as ImageProcessor from './library/ImageProcessor';
+import * as ImageReader from './library/ImageReader';
+import * as DimensionCalculator from './library/DimensionCalculator';
 
 import '../css/app.css'
 
@@ -15,8 +16,12 @@ class App extends Component {
 
   constructor(props) {
     super(props);
-    this.debounceUpdateImage = debounce(this.updateImage, 500);
+    this.debounceUpdateImage = debounce(this.updateImage, 350);
     this.state = {
+      hasGaugeAdjustments: false,
+      isHeightLastModified: false,
+      gaugeHigh: '',
+      gaugeWide: '',
       gridColor: '#000000',
       modifiedImageSource: null,
       originalImage: null,
@@ -26,17 +31,64 @@ class App extends Component {
     };
   }
 
+  onGaugeHighChange({ target: { value } }) {
+    const { hasGaugeAdjustments, gaugeWide } = this.state;
+    const gaugeHigh = parseInt(value, 10);
+    if (gaugeHigh) {
+      this.setState({ gaugeHigh });
+      this.updateStitches({ hasGaugeAdjustments, gaugeHigh, gaugeWide });
+    } else {
+      this.setState({ gaugeHigh: '' });
+    }
+  }
+
+  onGaugeWideChange({ target: { value } }) {
+    const { hasGaugeAdjustments, gaugeHigh } = this.state;
+    const gaugeWide = parseInt(value, 10);
+    if (gaugeWide) {
+      this.setState({ gaugeWide });
+      this.updateStitches({ hasGaugeAdjustments, gaugeHigh, gaugeWide });
+    } else {
+      this.setState({ gaugeWide: '' });
+    }
+  }
+
+  onHasGaugeAdjustmentChange() {
+    const { hasGaugeAdjustments } = this.state;
+    this.setState({ 
+      gaugeHigh: '',
+      gaugeWide: '',
+      hasGaugeAdjustments: !hasGaugeAdjustments
+    });
+    this.updateStitches({ hasGaugeAdjustments: !hasGaugeAdjustments });
+  }
+
+  updateStitches({ gaugeHigh, gaugeWide, hasGaugeAdjustments }) {
+    const { isHeightLastModified, originalImage, stitchesHigh, stitchesWide } = this.state;
+    if (isHeightLastModified && stitchesHigh) {
+      this.setState(DimensionCalculator.byHeight(stitchesHigh, originalImage, hasGaugeAdjustments, gaugeHigh, gaugeWide));
+      this.debounceUpdateImage();
+    } else if (stitchesWide) {
+      this.setState(DimensionCalculator.byWidth(stitchesWide, originalImage, hasGaugeAdjustments, gaugeHigh, gaugeWide));
+      this.debounceUpdateImage();
+    }
+  }
+
   onFileChange({ target: { files } }) {
     const file = files[0];
-    readImage(file)
+    ImageReader.readImage(file)
+      .then(ImageProcessor.opaque)
       .then(image => {
         this.setState({originalImage: image});
         return image;        
       })
-      .then(toImageSource)
+      .then(ImageReader.toImageSource)
       .then(imageSource => {
         this.setState({
           originalImageSource: imageSource,
+          gaugeHigh: '',
+          gaugeWide: '',
+          hasGaugeAdjustments: false,
           gridColor: '#000000',
           stitchesHigh: '',
           stitchesWide: '',
@@ -51,24 +103,20 @@ class App extends Component {
   }
 
   onStitchesHighChange({ target: { value } }) {
-    this.onStitchesChange(value, (stitchesHigh, originalImage) => ({
-      stitchesHigh,
-      stitchesWide: Math.round(stitchesHigh * originalImage.bitmap.width / originalImage.bitmap.height),
-    }));
+    this.onStitchesChange(value, DimensionCalculator.byHeight);
   }
 
   onStitchesWideChange({ target: { value } }) {
-    this.onStitchesChange(value, (stitchesWide, originalImage) => ({
-      stitchesHigh: Math.round(stitchesWide * originalImage.bitmap.height / originalImage.bitmap.width),
-      stitchesWide,
-    }));
+    this.onStitchesChange(value, DimensionCalculator.byWidth);
   }
 
   onStitchesChange(value, getDimensions) {
-    if (value) {
-      const { originalImage } = this.state;
-      const { stitchesHigh, stitchesWide } = getDimensions(parseInt(value, 10), originalImage);
+    const intValue = parseInt(value, 10);
+    if (intValue) {
+      const { originalImage, hasGaugeAdjustments, gaugeHigh, gaugeWide } = this.state;
+      const { isHeightLastModified, stitchesHigh, stitchesWide } = getDimensions(intValue, originalImage, hasGaugeAdjustments, gaugeHigh, gaugeWide);
       this.setState({
+        isHeightLastModified,
         stitchesHigh,
         stitchesWide,
       });
@@ -84,29 +132,24 @@ class App extends Component {
   }
 
   updateImage() {
-    const { gridColor, originalImage, stitchesHigh, stitchesWide } = this.state;
+    const { 
+      hasGaugeAdjustments,
+      gaugeHigh,
+      gaugeWide,
+      gridColor, 
+      originalImage, 
+      stitchesHigh, 
+      stitchesWide,
+    } = this.state;
     if (originalImage && stitchesHigh && stitchesWide) {
-      const cappedStitchesHigh = Math.min(stitchesHigh, originalImage.bitmap.height);
-      const cappedStitchesWide = Math.min(stitchesWide, originalImage.bitmap.width);
-      const modifiedImage = originalImage
-        .clone()
-        .resize(cappedStitchesWide, cappedStitchesHigh, Jimp.RESIZE_NEAREST_NEIGHBOR)
-        .resize(originalImage.bitmap.width, originalImage.bitmap.height, Jimp.RESIZE_NEAREST_NEIGHBOR);
-      const imageWithGrid = renderGrid(modifiedImage, gridColor, stitchesHigh, stitchesWide);
-      toImageSource(imageWithGrid)
+      ImageProcessor.update(originalImage, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide)
+        .then(ImageReader.toImageSource)
         .then(imageSource => this.setState({ modifiedImageSource: imageSource }));
     }
   }
 
   render() {
-    const {
-      gridColor,
-      modifiedImageSource,
-      originalImage,
-      originalImageSource,
-      stitchesHigh,
-      stitchesWide
-    } = this.state;
+    const { originalImageSource, modifiedImageSource } = this.state;
     return (
       <div className="app">
         <header>
@@ -116,14 +159,14 @@ class App extends Component {
           <Row className="show-grid">
             <Col xs={6} md={4}>
               <Sidebar 
-                gridColor={gridColor}
-                originalImage={originalImage}
+                {...this.state}
+                onGaugeHighChange={this.onGaugeHighChange.bind(this)}
+                onGaugeWideChange={this.onGaugeWideChange.bind(this)}
                 onFileChange={this.onFileChange.bind(this)}
+                onHasGaugeAdjustmentChange={this.onHasGaugeAdjustmentChange.bind(this)}
                 onGridColorChange={this.onGridColorChange.bind(this)}
                 onStitchesHighChange={this.onStitchesHighChange.bind(this)}
                 onStitchesWideChange={this.onStitchesWideChange.bind(this)}
-                stitchesHigh={stitchesHigh}
-                stitchesWide={stitchesWide}
               />
             </Col>
             <Col xs={6} md={4}>
