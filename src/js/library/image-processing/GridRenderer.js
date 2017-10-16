@@ -22,7 +22,7 @@ export function renderGrid(image, gridColor, stitchesHigh, stitchesWide) {
   const horizontalLinePixels = range(gridHeight, image.bitmap.height, gridHeight);
   const veritcalLinePixels = range(gridWidth, image.bitmap.width, gridWidth);
 
-  image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
+  image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
     if (horizontalLinePixels.includes(y) || veritcalLinePixels.includes(x)) {
       image.bitmap.data[idx + 0] = gridRed;
       image.bitmap.data[idx + 1] = gridGreen;

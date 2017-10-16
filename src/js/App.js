@@ -6,9 +6,10 @@ import Sidebar from './container/Sidebar';
 import OriginalImage from './container/OriginalImage';
 import ModifiedImage from './container/ModifiedImage';
 
+import * as DimensionCalculator from './library/DimensionCalculator';
 import * as ImageProcessor from './library/ImageProcessor';
 import * as ImageReader from './library/ImageReader';
-import * as DimensionCalculator from './library/DimensionCalculator';
+import * as ImageSerializer from './library/ImageSerializer';
 
 import '../css/app.css'
 
@@ -82,7 +83,7 @@ class App extends Component {
         this.setState({originalImage: image});
         return image;        
       })
-      .then(ImageReader.toImageSource)
+      .then(ImageSerializer.toSource)
       .then(imageSource => {
         this.setState({
           originalImageSource: imageSource,
@@ -143,7 +144,6 @@ class App extends Component {
     } = this.state;
     if (originalImage && stitchesHigh && stitchesWide) {
       ImageProcessor.update(originalImage, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide)
-        .then(ImageReader.toImageSource)
         .then(imageSource => this.setState({ modifiedImageSource: imageSource }));
     }
   }

@@ -1,22 +1,23 @@
-import Jimp from './Jimp';
-
 import * as ImageOpaquer from './image-processing/ImageOpaquer';
-import * as GridRenderer from './image-processing/GridRenderer';
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+const ImageUpdaterWorker = require('worker-loader!./image-processing/ImageUpdater.worker.js');
 
 export function opaque(image) {
   return new Promise((resolve, reject) =>
-    setTimeout(() => resolve(ImageOpaquer.opaque(image)), 0));
+    resolve(ImageOpaquer.opaque(image)));
 }
 
 export function update(originalImage, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide) {
-  return new Promise((resolve, reject) =>
-    setTimeout(() => {
-      const cappedStitchesHigh = Math.min(stitchesHigh, originalImage.bitmap.height);
-      const cappedStitchesWide = Math.min(stitchesWide, originalImage.bitmap.width);
-      const modifiedImage = originalImage
-        .clone()
-        .resize(cappedStitchesWide, cappedStitchesHigh, Jimp.RESIZE_NEAREST_NEIGHBOR)
-        .resize(originalImage.bitmap.width, originalImage.bitmap.height, Jimp.RESIZE_NEAREST_NEIGHBOR);
-      resolve(GridRenderer.renderGrid(modifiedImage, gridColor, cappedStitchesHigh, cappedStitchesWide));
-    }, 0));
+  return new Promise((resolve, reject) => {
+    const worker = new ImageUpdaterWorker();
+    worker.addEventListener('message', ({ data }) => resolve(data));
+    originalImage.getBuffer(originalImage.getMIME(), (error, imageBuffer) => {
+      if (error) {
+        reject(error);
+      } else {
+        worker.postMessage({imageBuffer, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide});
+      }
+    })
+  });
 }
