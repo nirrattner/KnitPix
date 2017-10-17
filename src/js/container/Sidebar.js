@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+import ColorQuantityChooser from './ColorQuantityChooser';
+import Downloader from './Downloader';
 import FileChooser from './FileChooser';
 import GaugeChooser from './GaugeChooser';
 import GridColorChooser from './GridColorChooser';
@@ -15,6 +17,8 @@ class Sidebar extends Component {
         <SizeChooser {...this.props} />
         <GaugeChooser {...this.props} />
         <GridColorChooser {...this.props} />
+        <ColorQuantityChooser {...this.props} />
+        <Downloader {...this.props} />
       </div>
     );
   }

@@ -19,6 +19,7 @@ class App extends Component {
     super(props);
     this.debounceUpdateImage = debounce(this.updateImage, 350);
     this.state = {
+      colorQuantity: '',
       hasGaugeAdjustments: false,
       isHeightLastModified: false,
       gaugeHigh: '',
@@ -32,13 +33,23 @@ class App extends Component {
     };
   }
 
+  onColorQuantityChange({ target: { value } }) {
+    const colorQuantity = parseInt(value, 10);
+    if (colorQuantity) {
+      this.setState({ colorQuantity });
+    } else if (!value) {
+      this.setState({ colorQuantity: '' });
+    }
+    this.debounceUpdateImage();
+  }
+
   onGaugeHighChange({ target: { value } }) {
     const { hasGaugeAdjustments, gaugeWide } = this.state;
     const gaugeHigh = parseInt(value, 10);
     if (gaugeHigh) {
       this.setState({ gaugeHigh });
       this.updateStitches({ hasGaugeAdjustments, gaugeHigh, gaugeWide });
-    } else {
+    } else if (!value) {
       this.setState({ gaugeHigh: '' });
     }
   }
@@ -49,7 +60,7 @@ class App extends Component {
     if (gaugeWide) {
       this.setState({ gaugeWide });
       this.updateStitches({ hasGaugeAdjustments, gaugeHigh, gaugeWide });
-    } else {
+    } else if (!value) {
       this.setState({ gaugeWide: '' });
     }
   }
@@ -134,6 +145,7 @@ class App extends Component {
 
   updateImage() {
     const { 
+      colorQuantity,
       hasGaugeAdjustments,
       gaugeHigh,
       gaugeWide,
@@ -143,7 +155,7 @@ class App extends Component {
       stitchesWide,
     } = this.state;
     if (originalImage && stitchesHigh && stitchesWide) {
-      ImageProcessor.update(originalImage, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide)
+      ImageProcessor.update(originalImage, colorQuantity, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide)
         .then(imageSource => this.setState({ modifiedImageSource: imageSource }));
     }
   }
@@ -160,6 +172,7 @@ class App extends Component {
             <Col xs={6} md={4}>
               <Sidebar 
                 {...this.state}
+                onColorQuantityChange={this.onColorQuantityChange.bind(this)}
                 onGaugeHighChange={this.onGaugeHighChange.bind(this)}
                 onGaugeWideChange={this.onGaugeWideChange.bind(this)}
                 onFileChange={this.onFileChange.bind(this)}

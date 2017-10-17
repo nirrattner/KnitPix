@@ -8,7 +8,7 @@ export function opaque(image) {
     resolve(ImageOpaquer.opaque(image)));
 }
 
-export function update(originalImage, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide) {
+export function update(originalImage, colorQuantity, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide) {
   return new Promise((resolve, reject) => {
     const worker = new ImageUpdaterWorker();
     worker.addEventListener('message', ({ data }) => resolve(data));
@@ -16,7 +16,7 @@ export function update(originalImage, gridColor, stitchesHigh, stitchesWide, has
       if (error) {
         reject(error);
       } else {
-        worker.postMessage({imageBuffer, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide});
+        worker.postMessage({imageBuffer, colorQuantity, gridColor, stitchesHigh, stitchesWide, hasGaugeAdjustments, gaugeHigh, gaugeWide});
       }
     })
   });
