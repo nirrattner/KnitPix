@@ -2,18 +2,18 @@
   "name": "knitpix",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://nrattner.github.io/KnitPix",
+  "homepage": "https://nirrattner.github.io/KnitPix",
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^3.3.7",
     "clusterfck": "^0.6.0",
-    "gh-pages": "^1.0.0",
+    "gh-pages": "^1.2.0",
     "javascript-debounce": "^1.0.0",
-    "react": "^16.0.0",
-    "react-bootstrap": "^0.31.3",
-    "react-dom": "^16.0.0",
+    "react": "^16.4.1",
+    "react-bootstrap": "^0.31.5",
+    "react-dom": "^16.4.1",
     "react-scripts": "1.0.14",
-    "worker-loader": "^1.0.0"
+    "worker-loader": "^1.1.1"
   },
   "scripts": {
     "predeploy": "npm run build",
