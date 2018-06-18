@@ -2,10 +2,12 @@
   "name": "knitpix",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://nrattner.github.io/KnitPix",
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^3.3.7",
     "clusterfck": "^0.6.0",
+    "gh-pages": "^1.0.0",
     "javascript-debounce": "^1.0.0",
     "react": "^16.0.0",
     "react-bootstrap": "^0.31.3",
@@ -14,6 +16,8 @@
     "worker-loader": "^1.0.0"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
